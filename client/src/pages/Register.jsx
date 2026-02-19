@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import API_BASE_URL from '../config';
 
 function Register() {
   const navigate = useNavigate();
@@ -27,14 +25,31 @@ function Register() {
     setError('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/register`, formData);
+      // Get existing users from localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
       
-      if (response.data.success) {
-        alert('Registration Successful');
-        navigate('/login');
+      // Check if user already exists
+      const existingUser = users.find(u => u.email === formData.email || u.username === formData.username);
+      if (existingUser) {
+        setError('User with this email or username already exists');
+        setLoading(false);
+        return;
       }
+
+      // Create new user
+      const newUser = {
+        id: Date.now().toString(),
+        ...formData
+      };
+
+      // Save to localStorage
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+
+      alert('Registration Successful');
+      navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError('Registration failed');
     } finally {
       setLoading(false);
     }

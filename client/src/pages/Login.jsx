@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import API_BASE_URL from '../config';
 
 function Login() {
   const navigate = useNavigate();
@@ -25,16 +23,22 @@ function Login() {
     setError('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/login`, formData);
+      // Get users from localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
       
-      if (response.data.success) {
+      // Find user by email
+      const user = users.find(u => u.email === formData.email && u.password === formData.password);
+      
+      if (user) {
         // Store login state in localStorage
-        localStorage.setItem('netflix_user', JSON.stringify(response.data.user));
+        localStorage.setItem('netflix_user', JSON.stringify(user));
         localStorage.setItem('isLoggedIn', 'true');
         navigate('/netflix');
+      } else {
+        setError('Invalid email or password');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError('Login failed');
     } finally {
       setLoading(false);
     }
